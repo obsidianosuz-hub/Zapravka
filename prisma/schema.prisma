@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  username       String   @unique
+  password       String
+  pinCode        String
+  role           String   // ADMIN, CASHIER
+  name           String?
+  email          String?
+  phone          String?
+  telegramHandle String?
+  telegramChatId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CorporateClient {
+  id        Int      @id @default(autoincrement())
+  name      String
+  balance   Float    @default(0.0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Order     Order[]
+}
+
+model Branch {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  address   String
+  status    String      // ACTIVE, INACTIVE
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  Dispenser Dispenser[]
+  Shift     Shift[]
+}
+
+model FuelType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  category  String   // METHANE, PROPANE, etc.
+  price     Float
+  unit      String   @default("m3") // m3, litr, kW
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Order     Order[]
+  Dispenser Dispenser[]
+}
+
+model Dispenser {
+  id              Int      @id @default(autoincrement())
+  dispenserNumber Int      @unique
+  fuelTypeId      Int
+  fuelType        FuelType @relation(fields: [fuelTypeId], references: [id])
+  branchId        Int?
+  branch          Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  status          String   // IDLE, BUSY, OFFLINE
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Order           Order[]
+}
+
+model Shift {
+  id              Int       @id @default(autoincrement())
+  branchId        Int
+  branch          Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  cashierName     String    // Cashier username/Telegram handle
+  startTime       DateTime  @default(now())
+  endTime         DateTime?
+  startCash       Float     // Opening cash in till
+  endCash         Float?    // Closing cash in till
+  startCounter    Float     // Initial cumulative counter
+  endCounter      Float?    // Ending cumulative counter
+  actualRevenue   Float?    // Actual cash entered by cashier at close
+  expectedRevenue Float?    // Sales calculated based on counters
+  status          String    // OPEN, CLOSED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Order {
+  id                Int              @id @default(autoincrement())
+  dispenserId       Int
+  dispenser         Dispenser        @relation(fields: [dispenserId], references: [id], onDelete: Cascade)
+  fuelTypeId        Int
+  fuelType          FuelType         @relation(fields: [fuelTypeId], references: [id])
+  volume            Float
+  totalAmount       Float
+  paymentType       String           // BANK_CARD, CORPORATE_ACCOUNT
+  status            String           // PENDING, COMPLETED, CANCELLED
+  corporateClientId Int?
+  corporateClient   CorporateClient? @relation(fields: [corporateClientId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model CompressorTelemetry {
+  id          Int      @id @default(autoincrement())
+  pressureBar Float
+  temperature Float?
+  recordedAt  DateTime @default(now())
+}
+
+model GasStorage {
+  id           Int      @id @default(autoincrement())
+  fuelCategory String   @unique // METHANE, PROPANE
+  currentLevel Float
+  maxCapacity  Float
+  unit         String
+  updatedAt    DateTime @updatedAt
+}
+
+model PowerConsumption {
+  id          Int      @id @default(autoincrement())
+  kwhConsumed Float
+  recordedAt  DateTime @default(now())
+}

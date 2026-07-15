@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  /* Text Sizes for settings */
+  html.text-sm {
+    font-size: 14px;
+  }
+  html.text-base {
+    font-size: 16px;
+  }
+  html.text-lg {
+    font-size: 18px;
+  }
+
+  /* Eye Protection Mode */
+  html.eye-protection-active {
+    filter: sepia(0.3) brightness(0.9) contrast(0.9) !important;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 transition-colors duration-200;
+  }
+
+  .dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  @keyframes fill {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+}

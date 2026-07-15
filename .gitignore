@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+*.db
+*.db-journal
+*.log
+.gemini/
+.system_generated/
+build/
+out/
+.DS_Store
