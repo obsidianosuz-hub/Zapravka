@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { MapPin, Bell, BellRing, Check } from 'lucide-react';
+import { MapPin, Bell, BellRing, Check, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -18,6 +18,7 @@ export default function MainLayout() {
   
   // Notification states
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [selectedAlert, setSelectedAlert] = useState(null);
   const [notifications, setNotifications] = useState([
     {
       id: "alert-1",
@@ -61,9 +62,7 @@ export default function MainLayout() {
     e.stopPropagation();
     setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, unread: false } : item));
     setIsNotifOpen(false);
-    if (n.route) {
-      navigate(n.route);
-    }
+    setSelectedAlert(n);
   };
 
   return (
@@ -147,6 +146,53 @@ export default function MainLayout() {
           </main>
         </div>
       </div>
+
+      {/* Detailed Modal View */}
+      {selectedAlert && (
+        <div className="fixed inset-0 w-screen h-screen bg-[#090d16] z-[9999] flex flex-col items-center justify-center p-8 md:p-16 text-white animate-in fade-in duration-150">
+          
+          {/* Top Right Exit Button */}
+          <button
+            onClick={() => {
+              if (selectedAlert.route) {
+                navigate(selectedAlert.route);
+              }
+              setSelectedAlert(null);
+            }}
+            className="absolute top-8 right-8 flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/10 active:scale-95 transition-all cursor-pointer text-sm"
+          >
+            <X className="w-4 h-4" />
+            <span>Sahifaga o'tish</span>
+          </button>
+
+          {/* Centered warning content */}
+          <div className="flex flex-col items-center space-y-6 max-w-3xl w-full">
+            
+            {/* Category/Severity Badge */}
+            <span className={`text-xs font-black uppercase px-3 py-1.5 rounded-md tracking-widest ${
+              selectedAlert.severity === 'critical' 
+                ? 'bg-red-500/10 text-red-400 border border-red-500/25' 
+                : 'bg-amber-500/10 text-amber-400 border border-amber-500/25'
+            }`}>
+              {selectedAlert.severity === 'critical' ? 'MUHIM (CRITICAL)' : 'DIQQAT (WARNING)'}
+            </span>
+
+            {/* Large Title */}
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight text-center">
+              {selectedAlert.title}
+            </h2>
+
+            {/* Message Box */}
+            <div className="w-full max-w-2xl bg-slate-900/50 border border-slate-800/80 p-8 rounded-2xl text-lg md:text-xl text-slate-200 text-center leading-relaxed shadow-inner">
+              {selectedAlert.message}
+            </div>
+
+            {/* Timestamp */}
+            <span className="text-xs text-slate-450 font-semibold">{selectedAlert.time}</span>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
