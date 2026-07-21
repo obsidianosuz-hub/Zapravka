@@ -63,6 +63,36 @@ export default function Cashier() {
     }
   };
 
+  const triggerDispenserSimulation = (dispNumber) => {
+    if (activeTimers.current[dispNumber]) {
+      clearTimeout(activeTimers.current[dispNumber].successTimer);
+      clearTimeout(activeTimers.current[dispNumber].resetTimer);
+    }
+    
+    const successTimer = setTimeout(() => {
+      setSuccessState(prev => ({ ...prev, [dispNumber]: true }));
+      
+      const resetTimer = setTimeout(async () => {
+        try {
+          await axios.put(`http://127.0.0.1:3000/api/dispensers/${dispNumber}/status`, { status: 'IDLE' });
+          setSuccessState(prev => {
+            const newState = { ...prev };
+            delete newState[dispNumber];
+            return newState;
+          });
+          const liveRes = await axios.get('http://127.0.0.1:3000/api/dashboard/live');
+          setDispensers(liveRes.data.dispensers || []);
+        } catch (err) {
+          console.error("Error resetting dispenser status:", err);
+        }
+      }, 5000);
+      
+      activeTimers.current[dispNumber] = { resetTimer };
+    }, 4000);
+
+    activeTimers.current[dispNumber] = { successTimer };
+  };
+
   // Load branches, corporate clients and check active shift on mount
   useEffect(() => {
     axios.get('http://127.0.0.1:3000/api/branches')
@@ -109,6 +139,7 @@ export default function Cashier() {
           if (statusRes.data.status === 'COMPLETED') {
             setPollingStatus('success');
             await axios.put(`http://127.0.0.1:3000/api/dispensers/${clickOrderDetails.dispenserNumber}/status`, { status: 'BUSY' });
+            triggerDispenserSimulation(clickOrderDetails.dispenserNumber);
             
             const liveRes = await axios.get('http://127.0.0.1:3000/api/dashboard/live');
             setDispensers(liveRes.data.dispensers || []);
@@ -288,6 +319,7 @@ export default function Cashier() {
       });
 
       await axios.put(`http://127.0.0.1:3000/api/dispensers/${selectedDispenser.dispenserNumber}/status`, { status: 'BUSY' });
+      triggerDispenserSimulation(selectedDispenser.dispenserNumber);
       
       const liveRes = await axios.get('http://127.0.0.1:3000/api/dashboard/live');
       setDispensers(liveRes.data.dispensers || []);
@@ -464,12 +496,16 @@ export default function Cashier() {
                       </p>
                     </div>
                     <span className={cn(
-                      "text-[9px] font-black uppercase px-2 py-0.5 rounded",
-                      d.status === 'IDLE' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
-                      d.status === 'BUSY' ? "bg-rose-500/10 text-rose-500 border border-rose-500/20 animate-pulse" :
-                      "bg-gray-500/10 text-gray-500 border border-gray-500/20"
+                      successState[d.dispenserNumber] ? "bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1" :
+                      d.status === 'IDLE' ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold px-2.5 py-1 rounded-md" :
+                      d.status === 'BUSY' ? "bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-2.5 py-1 rounded-md animate-pulse" :
+                      "bg-gray-500/10 text-gray-500 border border-gray-500/20 text-xs font-semibold px-2.5 py-1 rounded-md"
                     )}>
-                      {d.status === 'IDLE' ? 'BO\'SH' : d.status === 'BUSY' ? 'BAND' : 'OFFLINE'}
+                      {successState[d.dispenserNumber] && <CheckCircle2 className="w-3.5 h-3.5" />}
+                      {successState[d.dispenserNumber] ? 'MUVAFFAQIYATLI QUYILDI' : 
+                       d.status === 'IDLE' ? 'BO\'SH' : 
+                       d.status === 'BUSY' ? 'QUYILMOQDA...' : 
+                       'OFFLINE'}
                     </span>
                   </div>
 
