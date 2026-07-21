@@ -553,30 +553,39 @@ export default function Cashier() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setPaymentType('CORPORATE_ACCOUNT')}
+                        onClick={() => setPaymentType('MIXED')}
                         className={cn(
                           "p-3 rounded-xl border text-xs font-bold transition-all",
-                          paymentType === 'CORPORATE_ACCOUNT' ? "bg-indigo-600 text-white border-indigo-600" : "bg-slate-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                          paymentType === 'MIXED' ? "bg-indigo-600 text-white border-indigo-600" : "bg-slate-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
                         )}
                       >
-                        B2B Yuridik
+                        Aralash
                       </button>
                     </div>
                   </div>
 
-                  {paymentType === 'CORPORATE_ACCOUNT' && (
-                    <div className="space-y-3 bg-slate-50 dark:bg-gray-900 p-3 rounded-xl">
-                      <label className="block text-xs font-bold text-slate-400">Yuridik Mijozni Tanlang</label>
-                      <select
-                        value={selectedCorpClientId}
-                        onChange={(e) => setSelectedCorpClientId(e.target.value)}
-                        className="w-full p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm"
-                      >
-                        <option value="">Tanlang...</option>
-                        {corporateClients.map(c => (
-                          <option key={c.id} value={c.id}>{c.name} (Qoldiq: {c.balance.toLocaleString()} UZS)</option>
-                        ))}
-                      </select>
+                  {paymentType === 'MIXED' && (
+                    <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-gray-900 p-3 rounded-xl">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 mb-1">Naqd (UZS)</label>
+                        <input
+                          type="number"
+                          value={mixedCash}
+                          onChange={handleMixedCashChange}
+                          className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono font-bold"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 mb-1">Karta (UZS)</label>
+                        <input
+                          type="number"
+                          value={mixedCard}
+                          onChange={handleMixedCardChange}
+                          className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono font-bold"
+                          placeholder="0"
+                        />
+                      </div>
                     </div>
                   )}
 
