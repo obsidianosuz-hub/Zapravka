@@ -522,30 +522,45 @@ export default function Cashier() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <span 
+                      {/* 1. OFF / ON Toggle Button */}
+                      <button
+                        type="button"
                         onClick={(e) => handleToggleStatus(e, d)}
                         className={cn(
-                          "text-xs font-semibold px-2.5 py-1 rounded-md border transition-all select-none",
-                          (!successState[d.dispenserNumber] && (d.status === 'IDLE' || d.status === 'OFFLINE')) ? "cursor-pointer hover:opacity-80" : "",
-                          successState[d.dispenserNumber] ? "bg-blue-500/10 text-blue-400 border-blue-500/30 flex items-center gap-1" :
-                          d.status === 'IDLE' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                          d.status === 'BUSY' ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
-                          "bg-red-500/10 text-red-400 border-red-500/30"
-                        )}>
+                          "px-2 py-1 text-xs font-bold rounded-md transition-all cursor-pointer",
+                          d.status === 'OFFLINE' 
+                            ? "bg-emerald-600 hover:bg-emerald-500 text-white" 
+                            : "bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700 dark:bg-gray-800 dark:border-gray-700"
+                        )}
+                        title={d.status === 'OFFLINE' ? "Kalonkani yoqish (ON)" : "Kalonkani o'chirish (OFF)"}
+                      >
+                        {d.status === 'OFFLINE' ? "ON" : "OFF"}
+                      </button>
+
+                      {/* 2. Delete / Trash Button */}
+                      <button 
+                        type="button"
+                        onClick={(e) => handleDeleteDispenser(e, d.dispenserNumber)}
+                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all cursor-pointer"
+                        title="Kalonkani o'chirish"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+
+                      {/* 3. Status Badge */}
+                      <span className={cn(
+                        "text-xs font-semibold px-2.5 py-1 rounded-md border flex items-center gap-1",
+                        successState[d.dispenserNumber] ? "bg-blue-500/10 text-blue-400 border-blue-500/30" :
+                        d.status === 'IDLE' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                        d.status === 'BUSY' ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
+                        "bg-red-500/10 text-red-400 border-red-500/30"
+                      )}>
                         {successState[d.dispenserNumber] && <CheckCircle2 className="w-3.5 h-3.5" />}
                         {successState[d.dispenserNumber] ? 'MUVAFFAQIYATLI QUYILDI' : 
                          d.status === 'IDLE' ? 'BO\'SH' : 
                          d.status === 'BUSY' ? 'QUYILMOQDA...' : 
                          'O\'CHIRILGAN / OFF'}
                       </span>
-
-                      <button 
-                        type="button"
-                        onClick={(e) => handleDeleteDispenser(e, d.dispenserNumber)}
-                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 </div>
