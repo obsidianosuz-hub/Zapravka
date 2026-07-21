@@ -335,8 +335,8 @@ export default function Cashier() {
   const filteredDispensers = dispensers.filter(d => {
     const cat = d.fuelType?.category?.toLowerCase();
     if (navFilter === 'gas') return ['methane', 'propane'].includes(cat);
-    if (navFilter === 'petrol') return ['ai_80', 'ai_92', 'ai_95', 'ai_98', 'ai_100'].includes(cat);
-    if (navFilter === 'electric') return cat === 'electric';
+    if (navFilter === 'petrol') return ['ai_80', 'ai_92', 'ai_95', 'ai_98', 'ai_100', 'diesel'].includes(cat);
+    if (navFilter === 'electric') return cat?.includes('electric');
     return true;
   });
 
@@ -739,9 +739,16 @@ export default function Cashier() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm text-gray-950 dark:text-white">
           <div className="bg-white dark:bg-gray-800 w-full max-w-md p-8 rounded-2xl relative">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-5 right-5 text-gray-400">
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
               <X className="w-5 h-5" />
             </button>
+            
+            <h3 className="text-xl font-black mb-4">
+              {navFilter === 'gas' && "Yangi Gaz Kalonkasi Qo'shish"}
+              {navFilter === 'petrol' && "Yangi Benzin Kalonkasi Qo'shish"}
+              {navFilter === 'electric' && "Yangi Elektr Stansiyasi Qo'shish"}
+            </h3>
+
             <form onSubmit={handleAddDispenser} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-2">Kalonka Raqami</label>
@@ -750,10 +757,48 @@ export default function Cashier() {
                   required
                   value={newNumber}
                   onChange={(e) => setNewNumber(e.target.value)}
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border rounded-xl"
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl"
                 />
               </div>
-              <button type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold">Saqlash</button>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  {navFilter === 'gas' && "Gaz Turi"}
+                  {navFilter === 'petrol' && "Yoqilg'i Markasi"}
+                  {navFilter === 'electric' && "Ulagich / Quvvat Turi"}
+                </label>
+                <select
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value)}
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-medium"
+                >
+                  {navFilter === 'gas' && (
+                    <>
+                      <option value="METHANE">Metan</option>
+                      <option value="PROPANE">Propan</option>
+                    </>
+                  )}
+                  {navFilter === 'petrol' && (
+                    <>
+                      <option value="AI_80">AI-80</option>
+                      <option value="AI_92">AI-92</option>
+                      <option value="AI_95">AI-95</option>
+                      <option value="AI_98">AI-98</option>
+                      <option value="DIESEL">Dizel</option>
+                    </>
+                  )}
+                  {navFilter === 'electric' && (
+                    <>
+                      <option value="ELECTRIC">GB/T (DC Fast)</option>
+                      <option value="ELECTRIC_CCS2">CCS2 (Fast)</option>
+                      <option value="ELECTRIC_TYPE2">Type 2 (AC)</option>
+                      <option value="ELECTRIC_120KW">120 kW Fast Charger</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              <button type="submit" className="w-full py-3 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl font-bold mt-2 transition-colors">Saqlash</button>
             </form>
           </div>
         </div>
