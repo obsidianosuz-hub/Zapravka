@@ -370,6 +370,25 @@ export default function Cashier() {
     }
   };
 
+  const handleToggleStatus = async (e, dispenser) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (dispenser.status === 'BUSY' || successState[dispenser.dispenserNumber]) return;
+    
+    const newStatus = dispenser.status === 'OFFLINE' ? 'IDLE' : 'OFFLINE';
+    try {
+      await axios.put(`http://127.0.0.1:3000/api/dispensers/${dispenser.dispenserNumber}/status`, { status: newStatus });
+      const liveRes = await axios.get('http://127.0.0.1:3000/api/dashboard/live');
+      setDispensers(liveRes.data.dispensers || []);
+      
+      if (newStatus === 'OFFLINE' && selectedDispenser?.dispenserNumber === dispenser.dispenserNumber) {
+        setSelectedDispenser(null);
+      }
+    } catch (err) {
+      console.error("Error toggling status:", err);
+    }
+  };
+
   // Switch display filter
   const filteredDispensers = dispensers.filter(d => {
     const cat = d.fuelType?.category?.toLowerCase();
@@ -481,43 +500,53 @@ export default function Cashier() {
               {sortedDispensers.map((d) => (
                 <div
                   key={d.id}
-                  onClick={() => setSelectedDispenser(d)}
+                  onClick={() => {
+                    if (d.status !== 'OFFLINE') {
+                      setSelectedDispenser(d);
+                    }
+                  }}
                   className={cn(
-                    "relative overflow-hidden cursor-pointer p-6 rounded-3xl border-2 transition-all duration-200 group flex flex-col justify-between min-h-[140px]",
+                    "relative overflow-hidden p-6 rounded-3xl border-2 transition-all duration-200 group flex flex-col min-h-[140px]",
+                    d.status === 'OFFLINE' ? "opacity-60 grayscale cursor-not-allowed border-gray-100 dark:border-gray-800" : "cursor-pointer",
                     selectedDispenser?.id === d.id
                       ? "border-blue-500 bg-blue-50/20 dark:bg-blue-900/10 shadow-lg shadow-blue-500/5"
-                      : "border-gray-150 dark:border-gray-800 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
+                      : (d.status !== 'OFFLINE' && "border-gray-150 dark:border-gray-800 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-700")
                   )}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between h-full">
                     <div>
                       <h3 className="text-3xl font-black text-gray-900 dark:text-white">#{d.dispenserNumber}</h3>
                       <p className="text-xs text-gray-500 dark:text-slate-400 font-semibold mt-1">
                         {d.fuelType?.name || d.fuelType?.category}
                       </p>
                     </div>
-                    <span className={cn(
-                      successState[d.dispenserNumber] ? "bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1" :
-                      d.status === 'IDLE' ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold px-2.5 py-1 rounded-md" :
-                      d.status === 'BUSY' ? "bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold px-2.5 py-1 rounded-md animate-pulse" :
-                      "bg-gray-500/10 text-gray-500 border border-gray-500/20 text-xs font-semibold px-2.5 py-1 rounded-md"
-                    )}>
-                      {successState[d.dispenserNumber] && <CheckCircle2 className="w-3.5 h-3.5" />}
-                      {successState[d.dispenserNumber] ? 'MUVAFFAQIYATLI QUYILDI' : 
-                       d.status === 'IDLE' ? 'BO\'SH' : 
-                       d.status === 'BUSY' ? 'QUYILMOQDA...' : 
-                       'OFFLINE'}
-                    </span>
-                  </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span 
+                        onClick={(e) => handleToggleStatus(e, d)}
+                        className={cn(
+                          "text-xs font-semibold px-2.5 py-1 rounded-md border transition-all select-none",
+                          (!successState[d.dispenserNumber] && (d.status === 'IDLE' || d.status === 'OFFLINE')) ? "cursor-pointer hover:opacity-80" : "",
+                          successState[d.dispenserNumber] ? "bg-blue-500/10 text-blue-400 border-blue-500/30 flex items-center gap-1" :
+                          d.status === 'IDLE' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                          d.status === 'BUSY' ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
+                          "bg-red-500/10 text-red-400 border-red-500/30"
+                        )}>
+                        {successState[d.dispenserNumber] && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        {successState[d.dispenserNumber] ? 'MUVAFFAQIYATLI QUYILDI' : 
+                         d.status === 'IDLE' ? 'BO\'SH' : 
+                         d.status === 'BUSY' ? 'QUYILMOQDA...' : 
+                         'O\'CHIRILGAN / OFF'}
+                      </span>
 
-                  <div className="flex justify-between items-center mt-6">
-                    <button 
-                      type="button"
-                      onClick={(e) => handleDeleteDispenser(e, d.dispenserNumber)}
-                      className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                      <button 
+                        type="button"
+                        onClick={(e) => handleDeleteDispenser(e, d.dispenserNumber)}
+                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
