@@ -356,10 +356,11 @@ export default function Cashier() {
 
   const handleDeleteDispenser = async (e, dispenserNumber) => {
     e.stopPropagation();
+    e.preventDefault();
     if (window.confirm(`${dispenserNumber}-kalonkani o'chirishni xohlaysizmi?`)) {
       try {
         await axios.delete(`http://127.0.0.1:3000/api/dispensers/${dispenserNumber}`);
-        setDispensers(dispensers.filter(d => d.dispenserNumber !== dispenserNumber));
+        setDispensers(prev => prev.filter(d => d.dispenserNumber !== dispenserNumber));
         if (selectedDispenser?.dispenserNumber === dispenserNumber) {
           setSelectedDispenser(null);
         }
@@ -511,6 +512,7 @@ export default function Cashier() {
 
                   <div className="flex justify-between items-center mt-6">
                     <button 
+                      type="button"
                       onClick={(e) => handleDeleteDispenser(e, d.dispenserNumber)}
                       className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
                     >
