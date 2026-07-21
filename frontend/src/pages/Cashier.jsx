@@ -784,7 +784,7 @@ export default function Cashier() {
                       <option value="AI_92">AI-92</option>
                       <option value="AI_95">AI-95</option>
                       <option value="AI_98">AI-98</option>
-                      <option value="DIESEL">Dizel</option>
+                      <option value="AI_100">AI-100</option>
                     </>
                   )}
                   {navFilter === 'electric' && (
