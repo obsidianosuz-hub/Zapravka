@@ -340,6 +340,12 @@ export default function Cashier() {
     return true;
   });
 
+  const sortedDispensers = [...filteredDispensers].sort((a, b) => {
+    const numA = typeof a.dispenserNumber === 'number' ? a.dispenserNumber : parseInt(String(a.dispenserNumber || a.id).replace(/\D/g, '')) || 0;
+    const numB = typeof b.dispenserNumber === 'number' ? b.dispenserNumber : parseInt(String(b.dispenserNumber || b.id).replace(/\D/g, '')) || 0;
+    return numA - numB;
+  });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6 relative">
       
@@ -433,7 +439,7 @@ export default function Cashier() {
 
             {/* Dispensers Grid List */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-              {filteredDispensers.map((d) => (
+              {sortedDispensers.map((d) => (
                 <div
                   key={d.id}
                   onClick={() => setSelectedDispenser(d)}
