@@ -57,6 +57,12 @@ export default function Cashier() {
   const [message, setMessage] = useState(null);
   const [modalError, setModalError] = useState('');
 
+  const preventNegativeInput = (e) => {
+    if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+      e.preventDefault();
+    }
+  };
+
   // Load branches, corporate clients and check active shift on mount
   useEffect(() => {
     axios.get('http://127.0.0.1:3000/api/branches')
@@ -503,6 +509,8 @@ export default function Cashier() {
                     <input
                       type="number"
                       step="0.01"
+                      min="0"
+                      onKeyDown={preventNegativeInput}
                       required
                       value={volume}
                       onChange={handleVolumeChange}
@@ -515,6 +523,8 @@ export default function Cashier() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-350">Summa (UZS)</label>
                     <input
                       type="number"
+                      min="0"
+                      onKeyDown={preventNegativeInput}
                       required
                       value={amount}
                       onChange={handleAmountChange}
@@ -576,6 +586,8 @@ export default function Cashier() {
                         <label className="block text-xs font-bold text-slate-400 mb-1">Naqd (UZS)</label>
                         <input
                           type="number"
+                          min="0"
+                          onKeyDown={preventNegativeInput}
                           value={mixedCash}
                           onChange={handleMixedCashChange}
                           className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono font-bold"
@@ -586,6 +598,8 @@ export default function Cashier() {
                         <label className="block text-xs font-bold text-slate-400 mb-1">Karta (UZS)</label>
                         <input
                           type="number"
+                          min="0"
+                          onKeyDown={preventNegativeInput}
                           value={mixedCard}
                           onChange={handleMixedCardChange}
                           className="w-full p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-mono font-bold"
@@ -632,6 +646,8 @@ export default function Cashier() {
                 <label className="block text-xs font-bold text-gray-400 mb-2">Boshlang'ich Kassa Pul (UZS)</label>
                 <input
                   type="number"
+                  min="0"
+                  onKeyDown={preventNegativeInput}
                   required
                   value={startCash}
                   onChange={(e) => setStartCash(e.target.value)}
@@ -643,6 +659,8 @@ export default function Cashier() {
                 <label className="block text-xs font-bold text-gray-400 mb-2">Boshlang'ich Schetchik</label>
                 <input
                   type="number"
+                  min="0"
+                  onKeyDown={preventNegativeInput}
                   required
                   value={startCounter}
                   onChange={(e) => setStartCounter(e.target.value)}
@@ -685,6 +703,8 @@ export default function Cashier() {
                 <label className="block text-xs font-bold text-gray-400 mb-2">Yakuniy Schetchik</label>
                 <input
                   type="number"
+                  min="0"
+                  onKeyDown={preventNegativeInput}
                   required
                   value={endCounter}
                   onChange={(e) => setEndCounter(e.target.value)}
@@ -696,6 +716,8 @@ export default function Cashier() {
                 <label className="block text-xs font-bold text-gray-400 mb-2">Kassadagi haqiqiy naqd pul (UZS)</label>
                 <input
                   type="number"
+                  min="0"
+                  onKeyDown={preventNegativeInput}
                   required
                   value={actualRevenue}
                   onChange={(e) => setActualRevenue(e.target.value)}
@@ -754,6 +776,8 @@ export default function Cashier() {
                 <label className="block text-sm font-semibold mb-2">Kalonka Raqami</label>
                 <input
                   type="number"
+                  min="1"
+                  onKeyDown={preventNegativeInput}
                   required
                   value={newNumber}
                   onChange={(e) => setNewNumber(e.target.value)}
