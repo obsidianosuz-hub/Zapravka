@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Wallet, Server, Settings, Droplets,
-  Flame, ChevronDown, Fuel, Users, PieChart, Key, Scale
+  Flame, ChevronDown, Fuel, Users, PieChart, Key, Scale, Zap
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -221,7 +221,7 @@ export default function Sidebar() {
           )}
 
           {/* ── Kassa Dropdown ── */}
-          {user?.role === 'CASHIER' && (
+          {(user?.role === 'CASHIER' || user?.role === 'ADMIN') && (
           <div>
             <button
               onClick={() => toggleMenu('cashier', '/cashier')}
@@ -244,7 +244,7 @@ export default function Sidebar() {
 
             <div className={cn(
               "overflow-hidden transition-all duration-300 ease-in-out",
-              openMenus.cashier ? "max-h-40 opacity-100 mt-1" : "max-h-0 opacity-0"
+              openMenus.cashier ? "max-h-60 opacity-100 mt-1" : "max-h-0 opacity-0"
             )}>
               <div className="ml-4 pl-4 border-l-2 border-emerald-200 dark:border-emerald-800 space-y-1">
                 <button
@@ -270,6 +270,18 @@ export default function Sidebar() {
                 >
                   <Fuel className="w-4 h-4 text-amber-500" />
                   <span>{t('petrol')}</span>
+                </button>
+                <button
+                  onClick={() => handleSubItem('/cashier', 'electric')}
+                  className={cn(
+                    "w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                    isCashierActive && navFilter === 'electric'
+                      ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                  )}
+                >
+                  <Zap className="w-4 h-4 text-green-500" />
+                  <span>Elektr</span>
                 </button>
               </div>
             </div>
