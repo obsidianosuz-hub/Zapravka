@@ -211,7 +211,7 @@ export class DashboardService {
   static async getLiveStatus() {
     // 1. Dispensers status
     const dispensers = await prisma.dispenser.findMany({
-      select: { dispenserNumber: true, status: true, fuelType: { select: { category: true } } }
+      select: { id: true, dispenserNumber: true, status: true, fuelTypeId: true, fuelType: { select: { category: true } } }
     });
 
     // 2. Last 10 successful transactions
