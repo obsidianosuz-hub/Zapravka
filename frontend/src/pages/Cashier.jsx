@@ -522,19 +522,19 @@ export default function Cashier() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      {/* 1. OFF / ON Toggle Button */}
+                      {/* 1. RED POWER BUTTON (Replaces "OFF" text) */}
                       <button
                         type="button"
                         onClick={(e) => handleToggleStatus(e, d)}
                         className={cn(
-                          "px-2 py-1 text-xs font-bold rounded-md transition-all cursor-pointer",
+                          "p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center",
                           d.status === 'OFFLINE' 
-                            ? "bg-emerald-600 hover:bg-emerald-500 text-white" 
-                            : "bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700 dark:bg-gray-800 dark:border-gray-700"
+                            ? "bg-red-500 text-white shadow-lg shadow-red-500/30" 
+                            : "bg-slate-800 text-red-500 hover:bg-red-500/20 border border-slate-700/80"
                         )}
                         title={d.status === 'OFFLINE' ? "Kalonkani yoqish (ON)" : "Kalonkani o'chirish (OFF)"}
                       >
-                        {d.status === 'OFFLINE' ? "ON" : "OFF"}
+                        <Power className="w-4 h-4 stroke-[2.5]" />
                       </button>
 
                       {/* 2. Delete / Trash Button */}
