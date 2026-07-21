@@ -343,74 +343,40 @@ export default function Cashier() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-6 relative">
       
-      {/* If No Active Shift, Require Opening Shift */}
-      {!activeShift && (
-        <div className="lg:col-span-3 bg-[#1e293b] border border-slate-800 rounded-3xl p-8 shadow-2xl text-white max-w-xl mx-auto space-y-6">
-          <div className="text-center space-y-2">
-            <Clock className="w-16 h-16 text-indigo-500 mx-auto animate-pulse" />
-            <h2 className="text-2xl font-black">Smenani Faollashtirish</h2>
-            <p className="text-slate-400 text-sm">Sotuv amallarini bajarish uchun avval yangi ish smenasini ochishingiz lozim.</p>
-          </div>
-
-          <form onSubmit={handleOpenShiftSubmit} className="space-y-4">
-
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Boshlang'ich Kassa (UZS)</label>
-                <input
-                  type="number"
-                  required
-                  value={startCash}
-                  onChange={(e) => setStartCash(e.target.value)}
-                  className="w-full p-3 bg-slate-900 border border-slate-850 rounded-xl text-white font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Boshlang'ich Schetchik</label>
-                <input
-                  type="number"
-                  required
-                  value={startCounter}
-                  onChange={(e) => setStartCounter(e.target.value)}
-                  className="w-full p-3 bg-slate-900 border border-slate-850 rounded-xl text-white font-mono"
-                />
-              </div>
+      {/* Main Cashier Panel */}
+      <div className="lg:col-span-2 space-y-6">
+        
+        {/* Shift Banner & Info */}
+        <div className="bg-slate-800 dark:bg-gray-800 rounded-3xl p-6 border border-slate-700/50 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl">
+              <Clock className="w-6 h-6" />
             </div>
-
+            <div>
+              <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                {activeShift ? 'Faol Smena: Ochiq' : 'Smena: Yopiq (Ixtiyoriy)'}
+              </h4>
+              <p className="text-xs text-slate-400">
+                {activeShift ? `Boshlandi: ${new Date(activeShift.startTime).toLocaleTimeString()}` : 'Sotuv jarayoni faol'}
+              </p>
+            </div>
+          </div>
+          {activeShift ? (
             <button
-              type="submit"
-              className="w-full py-4 bg-indigo-650 hover:bg-indigo-600 rounded-xl font-bold transition-all text-sm uppercase tracking-wider"
+              onClick={() => setIsClosingShift(true)}
+              className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded-xl text-xs font-black uppercase transition-all"
+            >
+              Smenani Yopish
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsOpeningShift(true)}
+              className="bg-indigo-500/10 text-indigo-400 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-xs font-black uppercase transition-all"
             >
               Smenani Boshlash
             </button>
-          </form>
+          )}
         </div>
-      )}
-
-      {/* Main Cashier Panel */}
-      {activeShift && (
-        <>
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Shift Banner & Info */}
-            <div className="bg-slate-800 dark:bg-gray-800 rounded-3xl p-6 border border-slate-700/50 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">Faol Smena: Ochiq</h4>
-                  <p className="text-xs text-slate-400">Boshlandi: {new Date(activeShift.startTime).toLocaleTimeString()}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsClosingShift(true)}
-                className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded-xl text-xs font-black uppercase transition-all"
-              >
-                Smenani Yopish
-              </button>
-            </div>
 
             {/* Dispensers Header */}
             <div className="flex items-center justify-between mb-4">
@@ -635,7 +601,58 @@ export default function Cashier() {
 
             </div>
           </div>
-        </>
+
+      {/* OPEN SHIFT MODAL */}
+      {isOpeningShift && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm text-gray-950 dark:text-white">
+          <div className="bg-white dark:bg-gray-800 w-full max-w-md p-8 rounded-3xl border border-gray-200 dark:border-gray-750 shadow-2xl relative">
+            <h3 className="text-xl font-black mb-2 flex items-center space-x-2">
+              <Clock className="w-5 h-5 text-indigo-500" />
+              <span>Smenani Boshlash</span>
+            </h3>
+            <p className="text-xs text-gray-400 mb-6">Ish smenasini ochish uchun ma'lumotlarni kiriting:</p>
+
+            <form onSubmit={handleOpenShiftSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 mb-2">Boshlang'ich Kassa Pul (UZS)</label>
+                <input
+                  type="number"
+                  required
+                  value={startCash}
+                  onChange={(e) => setStartCash(e.target.value)}
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-mono text-lg font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 mb-2">Boshlang'ich Schetchik</label>
+                <input
+                  type="number"
+                  required
+                  value={startCounter}
+                  onChange={(e) => setStartCounter(e.target.value)}
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-mono text-lg font-bold"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setIsOpeningShift(false)}
+                  className="px-5 py-3 bg-gray-105 hover:bg-gray-200 dark:bg-gray-700 rounded-xl font-bold text-sm"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-3 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm"
+                >
+                  Smenani Ochish
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* CLOSE SHIFT MODAL */}
