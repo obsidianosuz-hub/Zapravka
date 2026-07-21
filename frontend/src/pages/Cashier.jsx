@@ -278,7 +278,7 @@ export default function Cashier() {
     setMessage(null);
 
     try {
-      await axios.post('http://127.0.0.1:3000/api/orders', {
+      await axios.post('http://127.0.0.1:3000/api/orders/create', {
         dispenserId: selectedDispenser.id,
         fuelTypeId: selectedDispenser.fuelTypeId,
         volume: parseFloat(volume),
