@@ -139,6 +139,18 @@ export default function Sidebar() {
                 >
                   <span>Sozlamalar</span>
                 </button>
+                <button
+                  onClick={() => navigate('/finance/tariffs')}
+                  className={cn(
+                    "w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left",
+                    location.pathname === '/finance/tariffs'
+                      ? "bg-emerald-105 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-bold"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                  )}
+                >
+                  <Fuel className="w-4 h-4 text-emerald-500" />
+                  <span>Yoqilg'i va Tariflar</span>
+                </button>
               </div>
             </div>
           </div>

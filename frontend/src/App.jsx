@@ -16,6 +16,7 @@ import FinanceSettings from './pages/FinanceSettings';
 import Contracts from './pages/Contracts';
 import ContractTemplates from './pages/ContractTemplates';
 import ComplianceManager from './pages/ComplianceManager';
+import Tariffs from './pages/Tariffs';
 import { useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ allowedRoles }) => {
@@ -66,6 +67,7 @@ function App() {
               <Route path="finance/reports" element={<Reports />} />
               <Route path="finance/actions" element={<ActivityLogs />} />
               <Route path="finance/settings" element={<FinanceSettings />} />
+              <Route path="finance/tariffs" element={<Tariffs />} />
               <Route path="yuridik/shartnomalar" element={<Contracts />} />
               <Route path="yuridik/customs" element={<CustomsImport />} />
               <Route path="yuridik/shablonlar" element={<ContractTemplates />} />

@@ -39,6 +39,25 @@ export const SettingsProvider = ({ children }) => {
     return defaultPrices;
   });
 
+  const [fuels, setFuels] = useState(() => {
+    const initialFuels = [
+      { id: 'methane', name: 'Metan (Methane)', category: 'GAZ', unit: 'm³', price: 3800, remaining: 42500, maxCapacity: 60000 },
+      { id: 'propane', name: 'Propan (Propane)', category: 'GAZ', unit: 'L', price: 6200, remaining: 18200, maxCapacity: 30000 },
+      { id: 'ai92', name: 'Benzin AI-92', category: 'BENZIN', unit: 'L', price: 10500, remaining: 24000, maxCapacity: 50000 },
+      { id: 'ai95', name: 'Benzin AI-95', category: 'BENZIN', unit: 'L', price: 12800, remaining: 11500, maxCapacity: 30000 },
+      { id: 'elektr', name: 'Elektr (DC Fast)', category: 'ELEKTR', unit: 'kWh', price: 2200, remaining: 99999, maxCapacity: 100000 },
+    ];
+    const saved = localStorage.getItem('ecogas_fuels');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return initialFuels;
+      }
+    }
+    return initialFuels;
+  });
+
   useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
@@ -59,6 +78,10 @@ export const SettingsProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('fuelPrices', JSON.stringify(fuelPrices));
   }, [fuelPrices]);
+
+  useEffect(() => {
+    localStorage.setItem('ecogas_fuels', JSON.stringify(fuels));
+  }, [fuels]);
 
   const togglePermission = (key) => {
     setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
@@ -82,6 +105,7 @@ export const SettingsProvider = ({ children }) => {
       fuelPrices, setFuelPrices,
       navFilter, setNavFilter,
       selectedBranchId, setSelectedBranchId,
+      fuels, setFuels,
       t
     }}>
       {children}
