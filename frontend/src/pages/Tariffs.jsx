@@ -10,6 +10,7 @@ export default function Tariffs() {
   const { fuels, setFuels, t } = useSettings();
   const [editingId, setEditingId] = useState(null);
   const [editPrice, setEditPrice] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
 
   const formatCurrency = (num) => new Intl.NumberFormat('uz-UZ').format(num || 0);
 
@@ -50,24 +51,79 @@ export default function Tariffs() {
     }
   };
 
+  const filteredFuels = fuels.filter(fuel => activeTab === 'all' || fuel.category === activeTab);
+
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* ── Header ── */}
-      <div className="flex items-center space-x-3">
-        <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
-          <Fuel className="w-8 h-8 text-indigo-500" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
+            <Fuel className="w-8 h-8 text-indigo-500" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Yoqilg'i va Tariflar</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
+              Barcha yoqilg'i turlari bo'yicha narxlar va joriy zaxira hajmlarini boshqarish
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Yoqilg'i va Tariflar</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Barcha yoqilg'i turlari bo'yicha narxlar va joriy zaxira hajmlarini boshqarish
-          </p>
-        </div>
+      </div>
+
+      {/* ── Tabs ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={cn(
+            "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border",
+            activeTab === 'all'
+              ? "bg-indigo-500 text-white border-indigo-600 shadow-sm"
+              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+          )}
+        >
+          Barchasi
+        </button>
+        <button
+          onClick={() => setActiveTab('GAZ')}
+          className={cn(
+            "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border flex items-center gap-2",
+            activeTab === 'GAZ'
+              ? "bg-blue-500 text-white border-blue-600 shadow-sm"
+              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400"
+          )}
+        >
+          <Droplets className="w-4 h-4" />
+          Gaz
+        </button>
+        <button
+          onClick={() => setActiveTab('BENZIN')}
+          className={cn(
+            "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border flex items-center gap-2",
+            activeTab === 'BENZIN'
+              ? "bg-orange-500 text-white border-orange-600 shadow-sm"
+              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-orange-50 dark:hover:bg-gray-700 hover:text-orange-600 dark:hover:text-orange-400"
+          )}
+        >
+          <Fuel className="w-4 h-4" />
+          Benzin
+        </button>
+        <button
+          onClick={() => setActiveTab('ELEKTR')}
+          className={cn(
+            "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border flex items-center gap-2",
+            activeTab === 'ELEKTR'
+              ? "bg-yellow-500 text-white border-yellow-600 shadow-sm"
+              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-gray-700 hover:text-yellow-600 dark:hover:text-yellow-400"
+          )}
+        >
+          <Zap className="w-4 h-4" />
+          Elektr
+        </button>
       </div>
 
       {/* ── Fuel Cards Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {fuels.map((fuel) => {
+        {filteredFuels.map((fuel) => {
           const percentage = Math.min(100, Math.max(0, (fuel.remaining / fuel.maxCapacity) * 100));
           return (
             <div key={fuel.id} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between">

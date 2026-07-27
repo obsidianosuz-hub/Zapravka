@@ -43,14 +43,25 @@ export const SettingsProvider = ({ children }) => {
     const initialFuels = [
       { id: 'methane', name: 'Metan (Methane)', category: 'GAZ', unit: 'm³', price: 3800, remaining: 42500, maxCapacity: 60000 },
       { id: 'propane', name: 'Propan (Propane)', category: 'GAZ', unit: 'L', price: 6200, remaining: 18200, maxCapacity: 30000 },
+      { id: 'ai80', name: 'Benzin AI-80', category: 'BENZIN', unit: 'L', price: 8200, remaining: 15000, maxCapacity: 40000 },
       { id: 'ai92', name: 'Benzin AI-92', category: 'BENZIN', unit: 'L', price: 10500, remaining: 24000, maxCapacity: 50000 },
       { id: 'ai95', name: 'Benzin AI-95', category: 'BENZIN', unit: 'L', price: 12800, remaining: 11500, maxCapacity: 30000 },
+      { id: 'ai98', name: 'Benzin AI-98', category: 'BENZIN', unit: 'L', price: 14500, remaining: 8000, maxCapacity: 20000 },
+      { id: 'ai100', name: 'Benzin AI-100', category: 'BENZIN', unit: 'L', price: 16800, remaining: 5000, maxCapacity: 15000 },
       { id: 'elektr', name: 'Elektr (DC Fast)', category: 'ELEKTR', unit: 'kWh', price: 2200, remaining: 99999, maxCapacity: 100000 },
     ];
     const saved = localStorage.getItem('ecogas_fuels');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // If parsed is missing the newly added fuels, we can merge them or just trust parsed if it's there.
+        // For now, we trust parsed, but the user might not see new ones if they already saved state.
+        // To force update, we could merge. A simple way:
+        const merged = initialFuels.map(f => {
+          const existing = parsed.find(pf => pf.id === f.id);
+          return existing ? existing : f;
+        });
+        return merged;
       } catch (e) {
         return initialFuels;
       }
