@@ -535,46 +535,52 @@ export default function Cashier() {
                       </p>
                     </div>
                     
-                    <div className="flex items-center gap-2">
-                      {/* 1. RED POWER BUTTON (Replaces "OFF" text) */}
+                    {/* Right: Actions & Status Badge Cluster */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Red Power Icon Button */}
                       <button
                         type="button"
                         onClick={(e) => handleToggleStatus(e, d)}
-                        className={cn(
-                          "p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center",
+                        className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center ${
                           d.status === 'OFFLINE' 
-                            ? "bg-red-500 text-white shadow-lg shadow-red-500/30" 
-                            : "bg-slate-800 text-red-500 hover:bg-red-500/20 border border-slate-700/80"
-                        )}
-                        title={d.status === 'OFFLINE' ? "Kalonkani yoqish (ON)" : "Kalonkani o'chirish (OFF)"}
+                            ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' 
+                            : 'bg-slate-800/90 text-red-500 hover:bg-red-500/20 border border-slate-700/80'
+                        }`}
+                        title={d.status === 'OFFLINE' ? "Kalonkani yoqish" : "Kalonkani o'chirish"}
                       >
-                        <Power className="w-4 h-4 stroke-[2.5]" />
+                        <Power className="w-3.5 h-3.5 stroke-[2.5]"/>
                       </button>
 
-                      {/* 2. Delete / Trash Button */}
-                      <button 
+                      {/* Delete Button */}
+                      <button
                         type="button"
                         onClick={(e) => handleDeleteDispenser(e, d.dispenserNumber)}
-                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
                         title="Kalonkani o'chirish"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5"/>
                       </button>
 
-                      {/* 3. Status Badge */}
-                      <span className={cn(
-                        "text-xs font-semibold px-2.5 py-1 rounded-md border flex items-center gap-1",
-                        successState[d.dispenserNumber] ? "bg-blue-500/10 text-blue-400 border-blue-500/30" :
-                        d.status === 'IDLE' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                        d.status === 'BUSY' ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
-                        "bg-red-500/10 text-red-400 border-red-500/30"
-                      )}>
-                        {successState[d.dispenserNumber] && <CheckCircle2 className="w-3.5 h-3.5" />}
-                        {successState[d.dispenserNumber] ? 'MUVAFFAQIYATLI QUYILDI' : 
-                         d.status === 'IDLE' ? 'BO\'SH' : 
-                         d.status === 'BUSY' ? 'QUYILMOQDA...' : 
-                         'O\'CHIRILGAN / OFF'}
-                      </span>
+                      {/* Status Badge */}
+                      {d.status === 'OFFLINE' ? (
+                        <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg border bg-red-500/10 text-red-400 border-red-500/30 whitespace-nowrap shrink-0">
+                          O'CHIRILGAN
+                        </span>
+                      ) : d.status === "BUSY" && !successState[d.dispenserNumber] ? (
+                        <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg border bg-amber-500/10 text-amber-400 border-amber-500/30 flex items-center gap-1.5 whitespace-nowrap shrink-0 animate-pulse">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                          QUYILMOQDA
+                        </span>
+                      ) : successState[d.dispenserNumber] ? (
+                        <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg border bg-blue-500/10 text-blue-400 border-blue-500/30 flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                          <CheckCircle2 className="w-3 h-3"/>
+                          YAKUNLANDI
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 text-[11px] font-bold rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 whitespace-nowrap shrink-0">
+                          BO'SH
+                        </span>
+                      )}
                     </div>
                   </div>
 
