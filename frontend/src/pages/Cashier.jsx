@@ -57,18 +57,43 @@ export default function Cashier() {
   const [message, setMessage] = useState(null);
   const [modalError, setModalError] = useState('');
 
+  const [liveFueling, setLiveFueling] = useState({});
+
   const preventNegativeInput = (e) => {
     if (e.key === '-' || e.key === 'e' || e.key === 'E') {
       e.preventDefault();
     }
   };
 
-  const triggerDispenserSimulation = (dispNumber) => {
+  const triggerDispenserSimulation = (dispNumber, targetVolume, targetAmount) => {
     if (activeTimers.current[dispNumber]) {
       clearTimeout(activeTimers.current[dispNumber].successTimer);
       clearTimeout(activeTimers.current[dispNumber].resetTimer);
+      clearInterval(activeTimers.current[dispNumber].intervalTimer);
     }
     
+    // Setup live fueling animation
+    const steps = 40; // 4 seconds total, 100ms per step
+    const volStep = targetVolume / steps;
+    const amountStep = targetAmount / steps;
+    let currentStep = 0;
+
+    setLiveFueling(prev => ({ ...prev, [dispNumber]: { currentVolume: 0, currentAmount: 0 } }));
+
+    const intervalTimer = setInterval(() => {
+      currentStep++;
+      setLiveFueling(prev => ({
+        ...prev,
+        [dispNumber]: {
+          currentVolume: Math.min(targetVolume, volStep * currentStep),
+          currentAmount: Math.min(targetAmount, amountStep * currentStep)
+        }
+      }));
+      if (currentStep >= steps) {
+        clearInterval(intervalTimer);
+      }
+    }, 100);
+
     const successTimer = setTimeout(() => {
       setSuccessState(prev => ({ ...prev, [dispNumber]: true }));
       
@@ -76,6 +101,11 @@ export default function Cashier() {
         try {
           await axios.put(`http://127.0.0.1:3000/api/dispensers/${dispNumber}/status`, { status: 'IDLE' });
           setSuccessState(prev => {
+            const newState = { ...prev };
+            delete newState[dispNumber];
+            return newState;
+          });
+          setLiveFueling(prev => {
             const newState = { ...prev };
             delete newState[dispNumber];
             return newState;
@@ -90,7 +120,7 @@ export default function Cashier() {
       activeTimers.current[dispNumber] = { resetTimer };
     }, 4000);
 
-    activeTimers.current[dispNumber] = { successTimer };
+    activeTimers.current[dispNumber] = { successTimer, intervalTimer };
   };
 
   // Load branches, corporate clients and check active shift on mount
@@ -319,7 +349,11 @@ export default function Cashier() {
       });
 
       await axios.put(`http://127.0.0.1:3000/api/dispensers/${selectedDispenser.dispenserNumber}/status`, { status: 'BUSY' });
-      triggerDispenserSimulation(selectedDispenser.dispenserNumber);
+      triggerDispenserSimulation(
+        selectedDispenser.dispenserNumber, 
+        parseFloat(volume), 
+        parseFloat(amount)
+      );
       
       const liveRes = await axios.get('http://127.0.0.1:3000/api/dashboard/live');
       setDispensers(liveRes.data.dispensers || []);
@@ -513,7 +547,7 @@ export default function Cashier() {
                       : (d.status !== 'OFFLINE' && "border-gray-150 dark:border-gray-800 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-700")
                   )}
                 >
-                  <div className="flex items-start justify-between h-full">
+                  <div className="flex items-start justify-between w-full">
                     <div>
                       <h3 className="text-3xl font-black text-gray-900 dark:text-white">#{d.dispenserNumber}</h3>
                       <p className="text-xs text-gray-500 dark:text-slate-400 font-semibold mt-1">
@@ -563,6 +597,30 @@ export default function Cashier() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Live Fueling Animation Block */}
+                  {(d.status === 'BUSY' || successState[d.dispenserNumber]) && liveFueling[d.dispenserNumber] && (
+                    <div className={cn(
+                      "mt-4 p-3 rounded-xl border flex justify-between items-center w-full transition-all",
+                      successState[d.dispenserNumber] 
+                        ? "bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/30" 
+                        : "bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30 animate-pulse"
+                    )}>
+                      <div className="flex flex-col">
+                        <span className={cn("text-xs font-semibold mb-0.5", successState[d.dispenserNumber] ? "text-blue-600/70 dark:text-blue-500/70" : "text-amber-600/70 dark:text-amber-500/70")}>MIQDOR</span>
+                        <span className={cn("text-lg font-bold", successState[d.dispenserNumber] ? "text-blue-700 dark:text-blue-500" : "text-amber-700 dark:text-amber-500")}>
+                          {liveFueling[d.dispenserNumber].currentVolume.toFixed(2)} {d.fuelType?.category === 'METHANE' ? 'm³' : 'L'}
+                        </span>
+                      </div>
+                      <div className={cn("h-8 w-px", successState[d.dispenserNumber] ? "bg-blue-200 dark:bg-blue-800/30" : "bg-amber-200 dark:bg-amber-800/30")}></div>
+                      <div className="flex flex-col text-right">
+                        <span className={cn("text-xs font-semibold mb-0.5", successState[d.dispenserNumber] ? "text-blue-600/70 dark:text-blue-500/70" : "text-amber-600/70 dark:text-amber-500/70")}>SUMMA</span>
+                        <span className={cn("text-lg font-bold", successState[d.dispenserNumber] ? "text-blue-700 dark:text-blue-500" : "text-amber-700 dark:text-amber-500")}>
+                          {Math.round(liveFueling[d.dispenserNumber].currentAmount).toLocaleString()} UZS
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
