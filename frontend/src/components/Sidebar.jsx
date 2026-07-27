@@ -221,7 +221,7 @@ export default function Sidebar() {
           )}
 
           {/* ── Kassa Dropdown ── */}
-          {(user?.role === 'CASHIER' || user?.role === 'ADMIN') && (
+          {user?.role === 'CASHIER' && (
           <div>
             <button
               onClick={() => toggleMenu('cashier', '/cashier')}
