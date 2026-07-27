@@ -25,18 +25,24 @@ export default function Dashboard() {
   const [petrolTab, setPetrolTab] = useState('all'); // 'all' | 'ai_80' | 'ai_92' | 'ai_95' | 'ai_98' | 'ai_100'
 
   useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
+    const fetchStats = async (showLoading = false) => {
+      if (showLoading) setLoading(true);
       try {
         const res = await axios.get(`http://127.0.0.1:3000/api/dashboard/stats?period=${period}`);
         setStats(res.data);
       } catch (err) {
         console.error("Failed to fetch stats", err);
       } finally {
-        setLoading(false);
+        if (showLoading) setLoading(false);
       }
     };
-    fetchStats();
+    
+    // Initial fetch with loading spinner
+    fetchStats(true);
+
+    // Auto-refresh every 5 seconds
+    const interval = setInterval(() => fetchStats(false), 5000);
+    return () => clearInterval(interval);
   }, [period]);
 
   const formatCurrency = (num) => new Intl.NumberFormat('uz-UZ').format(num || 0);
