@@ -168,8 +168,11 @@ export default function Cashier() {
           const statusRes = await axios.get(`http://127.0.0.1:3000/api/payment/status/${clickOrderDetails.orderId}`);
           if (statusRes.data.status === 'COMPLETED') {
             setPollingStatus('success');
-            await axios.put(`http://127.0.0.1:3000/api/dispensers/${clickOrderDetails.dispenserNumber}/status`, { status: 'BUSY' });
-            triggerDispenserSimulation(clickOrderDetails.dispenserNumber);
+            
+            // Confirm order for click payment
+            await axios.post('http://127.0.0.1:3000/api/orders/confirm', { orderId: clickOrderDetails.orderId }).catch(console.error);
+
+            triggerDispenserSimulation(clickOrderDetails.dispenserNumber, clickOrderDetails.volume, clickOrderDetails.amount);
             
             const liveRes = await axios.get('http://127.0.0.1:3000/api/dashboard/live');
             setDispensers(liveRes.data.dispensers || []);
@@ -339,7 +342,7 @@ export default function Cashier() {
     setMessage(null);
 
     try {
-      await axios.post('http://127.0.0.1:3000/api/orders/create', {
+      const createRes = await axios.post('http://127.0.0.1:3000/api/orders/create', {
         dispenserId: selectedDispenser.id,
         fuelTypeId: selectedDispenser.fuelTypeId,
         volume: parseFloat(volume),
@@ -348,7 +351,15 @@ export default function Cashier() {
         corporateClientId: paymentType === 'CORPORATE_ACCOUNT' ? parseInt(selectedCorpClientId) : undefined
       });
 
-      await axios.put(`http://127.0.0.1:3000/api/dispensers/${selectedDispenser.dispenserNumber}/status`, { status: 'BUSY' });
+      const orderId = createRes.data.order.id;
+
+      // Confirm the order so the backend transitions it to COMPLETED and adds it to Dashboard stats
+      await axios.post('http://127.0.0.1:3000/api/orders/confirm', { 
+        orderId,
+        terminalId: paymentType === 'BANK_CARD' ? "TERM-1234" : undefined 
+      });
+
+      // Run frontend visual simulation
       triggerDispenserSimulation(
         selectedDispenser.dispenserNumber, 
         parseFloat(volume), 
