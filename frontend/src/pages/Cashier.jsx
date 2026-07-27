@@ -455,37 +455,6 @@ export default function Cashier() {
       {/* Main Cashier Panel */}
       <div className="lg:col-span-2 space-y-6">
         
-        {/* Shift Banner & Info */}
-        <div className="bg-slate-800 dark:bg-gray-800 rounded-3xl p-6 border border-slate-700/50 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl">
-              <Clock className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                {activeShift ? 'Faol Smena: Ochiq' : 'Smena: Yopiq (Ixtiyoriy)'}
-              </h4>
-              <p className="text-xs text-slate-400">
-                {activeShift ? `Boshlandi: ${new Date(activeShift.startTime).toLocaleTimeString()}` : 'Sotuv jarayoni faol'}
-              </p>
-            </div>
-          </div>
-          {activeShift ? (
-            <button
-              onClick={() => setIsClosingShift(true)}
-              className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded-xl text-xs font-black uppercase transition-all"
-            >
-              Smenani Yopish
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsOpeningShift(true)}
-              className="bg-indigo-500/10 text-indigo-400 hover:bg-indigo-600 hover:text-white px-4 py-2 rounded-xl text-xs font-black uppercase transition-all"
-            >
-              Smenani Boshlash
-            </button>
-          )}
-        </div>
 
             {/* Dispensers Header */}
             <div className="flex items-center justify-between mb-4">
