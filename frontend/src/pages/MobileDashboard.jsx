@@ -134,6 +134,7 @@ export default function MobileDashboard() {
             <button onClick={() => setPetrolTab('ai_92')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors", petrolTab === 'ai_92' ? "bg-orange-500/20 text-orange-400 border border-orange-500/50" : "bg-slate-900 text-slate-400 border border-slate-800")}>AI-92</button>
             <button onClick={() => setPetrolTab('ai_95')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors", petrolTab === 'ai_95' ? "bg-red-500/20 text-red-400 border border-red-500/50" : "bg-slate-900 text-slate-400 border border-slate-800")}>AI-95</button>
             <button onClick={() => setPetrolTab('ai_98')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors", petrolTab === 'ai_98' ? "bg-purple-500/20 text-purple-400 border border-purple-500/50" : "bg-slate-900 text-slate-400 border border-slate-800")}>AI-98</button>
+            <button onClick={() => setPetrolTab('ai_100')} className={cn("px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors", petrolTab === 'ai_100' ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50" : "bg-slate-900 text-slate-400 border border-slate-800")}>AI-100</button>
           </>
         )}
         {navFilter === 'elektr' && (
@@ -203,6 +204,36 @@ export default function MobileDashboard() {
               <span className="font-bold text-xs uppercase">AI-92</span>
             </div>
             <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_92?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+          </div>
+        )}
+
+        {navFilter === 'petrol' && (petrolTab === 'all' || petrolTab === 'ai_95') && (
+          <div className={cn("bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4", petrolTab !== 'all' && 'col-span-2 flex justify-between items-center')}>
+            <div className="flex items-center gap-2 text-red-500 mb-2">
+              <Fuel className="w-4 h-4" />
+              <span className="font-bold text-xs uppercase">AI-95</span>
+            </div>
+            <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_95?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+          </div>
+        )}
+
+        {navFilter === 'petrol' && (petrolTab === 'all' || petrolTab === 'ai_98') && (
+          <div className={cn("bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4", petrolTab !== 'all' && 'col-span-2 flex justify-between items-center')}>
+            <div className="flex items-center gap-2 text-purple-500 mb-2">
+              <Fuel className="w-4 h-4" />
+              <span className="font-bold text-xs uppercase">AI-98</span>
+            </div>
+            <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_98?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+          </div>
+        )}
+
+        {navFilter === 'petrol' && (petrolTab === 'all' || petrolTab === 'ai_100') && (
+          <div className={cn("bg-slate-900/80 border border-slate-800/80 rounded-2xl p-4", petrolTab !== 'all' && 'col-span-2 flex justify-between items-center')}>
+            <div className="flex items-center gap-2 text-emerald-500 mb-2">
+              <Fuel className="w-4 h-4" />
+              <span className="font-bold text-xs uppercase">AI-100</span>
+            </div>
+            <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_100?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
           </div>
         )}
       </div>
