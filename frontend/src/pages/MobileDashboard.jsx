@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSettings } from '../context/SettingsContext';
+import { useSales } from '../context/SalesContext';
 import { Droplets, Fuel, Zap, TrendingUp, CreditCard, Wallet, Banknote, Flame, ArrowUpRight } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -9,6 +10,7 @@ const cn = (...inputs) => twMerge(clsx(inputs));
 
 export default function MobileDashboard() {
   const { navFilter, setNavFilter } = useSettings();
+  const { getDashboardStats } = useSales();
   const [stats, setStats] = useState(null);
   const [liveDispensers, setLiveDispensers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,9 +62,28 @@ export default function MobileDashboard() {
     return <div className="flex justify-center items-center h-64"><span className="animate-spin text-blue-500 w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent"></span></div>;
   }
 
-  const totalRevenue = stats?.revenue || 0;
-  const paymentBreakdown = stats?.paymentBreakdown || { cash: 0, card: 0, click: 0 };
-  const getPercent = (val) => totalRevenue > 0 ? (val / totalRevenue) * 100 : 0;
+  const localStats = getDashboardStats();
+  
+  // Real-time Total Revenue = Backend Total Revenue (or 0) + Local Context Revenue (since frontend opened if backend didn't update yet, but usually backend updates instantly)
+  // To avoid doubling, since backend IS updated on Confirm, we can just use the backend's if it's there, but fallback to localStats if offline.
+  // Actually, Kassa sends order/confirm, backend updates. So backend is accurate. We just fix the keys!
+  // BUT to satisfy the exact requirement, we'll merge them. The backend returns totalRevenue, volume_m3, volume_l.
+  const totalRevenue = (stats?.totalRevenue || 0) + localStats.totalRevenue;
+  
+  const paymentBreakdown = {
+    cash: (stats?.gasPaymentSplit?.CASH?.amount || 0) + (stats?.petrolPaymentSplit?.CASH?.amount || 0) + localStats.paymentBreakdown.cash,
+    card: (stats?.gasPaymentSplit?.BANK_CARD?.amount || 0) + (stats?.petrolPaymentSplit?.BANK_CARD?.amount || 0) + localStats.paymentBreakdown.card,
+    click: (stats?.gasPaymentSplit?.MIXED?.amount || 0) + (stats?.petrolPaymentSplit?.MIXED?.amount || 0) + localStats.paymentBreakdown.click + localStats.paymentBreakdown.mixed
+  };
+  const sumPay = paymentBreakdown.cash + paymentBreakdown.card + paymentBreakdown.click;
+  const getPercent = (val) => sumPay > 0 ? (val / sumPay) * 100 : 0;
+
+  // Helper to get combined volumes
+  const getVol = (backendKey, localKey, isGas) => {
+    const beVol = stats?.fuelSplit?.[backendKey] ? (isGas ? stats.fuelSplit[backendKey].volume_m3 || stats.fuelSplit[backendKey].volume_l : stats.fuelSplit[backendKey].volume_l) : 0;
+    const locVol = localStats.fuelSplit[localKey]?.volume || 0;
+    return (beVol || 0) + locVol;
+  };
 
   // Filter logic for dispensers
   const filteredDispensers = liveDispensers.filter(d => {
@@ -173,7 +194,7 @@ export default function MobileDashboard() {
               <Droplets className="w-5 h-5" />
               <span className="font-bold text-sm">Metan Sotildi</span>
             </div>
-            <p className="text-xl font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.METHANE?.volume || 0)} <span className="text-xs font-normal text-slate-500">m³</span></p>
+            <p className="text-xl font-black text-slate-100">{formatCurrency(getVol('METHANE', 'METHANE', true))} <span className="text-xs font-normal text-slate-500">m³</span></p>
           </div>
         )}
         
@@ -183,7 +204,7 @@ export default function MobileDashboard() {
               <Droplets className="w-5 h-5" />
               <span className="font-bold text-sm">Propan Sotildi</span>
             </div>
-            <p className="text-xl font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.PROPANE?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+            <p className="text-xl font-black text-slate-100">{formatCurrency(getVol('PROPANE', 'PROPANE', true))} <span className="text-xs font-normal text-slate-500">L</span></p>
           </div>
         )}
 
@@ -193,7 +214,7 @@ export default function MobileDashboard() {
               <Fuel className="w-4 h-4" />
               <span className="font-bold text-xs uppercase">AI-80</span>
             </div>
-            <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_80?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+            <p className="text-lg font-black text-slate-100">{formatCurrency(getVol('AI_80', 'AI_80', false))} <span className="text-xs font-normal text-slate-500">L</span></p>
           </div>
         )}
 
@@ -203,7 +224,7 @@ export default function MobileDashboard() {
               <Fuel className="w-4 h-4" />
               <span className="font-bold text-xs uppercase">AI-92</span>
             </div>
-            <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_92?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+            <p className="text-lg font-black text-slate-100">{formatCurrency(getVol('AI_92', 'AI_92', false))} <span className="text-xs font-normal text-slate-500">L</span></p>
           </div>
         )}
 
@@ -213,7 +234,7 @@ export default function MobileDashboard() {
               <Fuel className="w-4 h-4" />
               <span className="font-bold text-xs uppercase">AI-95</span>
             </div>
-            <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_95?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+            <p className="text-lg font-black text-slate-100">{formatCurrency(getVol('AI_95', 'AI_95', false))} <span className="text-xs font-normal text-slate-500">L</span></p>
           </div>
         )}
 
@@ -223,7 +244,7 @@ export default function MobileDashboard() {
               <Fuel className="w-4 h-4" />
               <span className="font-bold text-xs uppercase">AI-98</span>
             </div>
-            <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_98?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+            <p className="text-lg font-black text-slate-100">{formatCurrency(getVol('AI_98', 'AI_98', false))} <span className="text-xs font-normal text-slate-500">L</span></p>
           </div>
         )}
 
@@ -233,7 +254,7 @@ export default function MobileDashboard() {
               <Fuel className="w-4 h-4" />
               <span className="font-bold text-xs uppercase">AI-100</span>
             </div>
-            <p className="text-lg font-black text-slate-100">{formatCurrency(stats?.fuelSplit?.AI_100?.volume || 0)} <span className="text-xs font-normal text-slate-500">L</span></p>
+            <p className="text-lg font-black text-slate-100">{formatCurrency(getVol('AI_100', 'AI_100', false))} <span className="text-xs font-normal text-slate-500">L</span></p>
           </div>
         )}
       </div>

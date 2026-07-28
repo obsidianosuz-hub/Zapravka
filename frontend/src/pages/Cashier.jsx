@@ -8,12 +8,14 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
+import { useSales } from '../context/SalesContext';
 
 const cn = (...inputs) => twMerge(clsx(inputs));
 
 export default function Cashier() {
   const { t, fuelPrices, navFilter, setNavFilter } = useSettings();
   const { user } = useAuth();
+  const { addTransaction } = useSales();
   
   // Shift (Smena) States
   const [activeShift, setActiveShift] = useState(null);
@@ -171,6 +173,20 @@ export default function Cashier() {
             
             // Confirm order for click payment
             await axios.post('http://127.0.0.1:3000/api/orders/confirm', { orderId: clickOrderDetails.orderId }).catch(console.error);
+
+            // Record transaction in Global State
+            const d = dispensers.find(x => x.dispenserNumber === clickOrderDetails.dispenserNumber);
+            if (d) {
+              addTransaction({
+                id: `tx_${clickOrderDetails.orderId}`,
+                fuelId: d.fuelType?.name || d.fuelType?.category,
+                category: d.fuelType?.category,
+                volume: clickOrderDetails.volume,
+                pricePerUnit: fuelPrices[d.fuelType?.category] || 3800,
+                totalSum: clickOrderDetails.amount,
+                paymentMethod: 'CLICK'
+              });
+            }
 
             triggerDispenserSimulation(clickOrderDetails.dispenserNumber, clickOrderDetails.volume, clickOrderDetails.amount);
             
@@ -357,6 +373,17 @@ export default function Cashier() {
       await axios.post('http://127.0.0.1:3000/api/orders/confirm', { 
         orderId,
         terminalId: paymentType === 'BANK_CARD' ? "TERM-1234" : undefined 
+      });
+
+      // Record transaction in Global State
+      addTransaction({
+        id: `tx_${orderId}`,
+        fuelId: selectedDispenser.fuelType?.name || selectedDispenser.fuelType?.category,
+        category: selectedDispenser.fuelType?.category,
+        volume: parseFloat(volume),
+        pricePerUnit: getPrice(),
+        totalSum: parseFloat(amount),
+        paymentMethod: paymentType
       });
 
       // Run frontend visual simulation
