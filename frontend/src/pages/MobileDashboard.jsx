@@ -4,7 +4,6 @@ import { TrendingUp, Activity, Droplets, Flame, Fuel, Gauge } from 'lucide-react
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useSettings } from '../context/SettingsContext';
-import { useSales } from '../context/SalesContext';
 
 const cn = (...inputs) => twMerge(clsx(inputs));
 
@@ -18,10 +17,11 @@ const PETROL_TYPES = [
 
 export default function MobileDashboard() {
   const { t, navFilter, setNavFilter, fuelPrices } = useSettings();
-  const { getDashboardStats } = useSales();
-  const [period, setPeriod] = useState('daily');
+  // MUST MATCH DESKTOP EXACTLY: Default is 'monthly'
+  const [period, setPeriod] = useState('monthly');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  
   const [gasTab, setGasTab] = useState('all'); 
   const [petrolTab, setPetrolTab] = useState('all'); 
 
@@ -31,6 +31,7 @@ export default function MobileDashboard() {
       setNavFilter('gas');
     }
 
+    // EXACT SAME DATA SOURCE AS DESKTOP DASHBOARD
     const fetchStats = async (showLoading = false) => {
       if (showLoading) setLoading(true);
       try {
@@ -49,47 +50,6 @@ export default function MobileDashboard() {
   }, [period, navFilter, setNavFilter]);
 
   const formatCurrency = (num) => new Intl.NumberFormat('uz-UZ').format(Math.round(num || 0));
-
-  // Integrate live local sales context (only if period is daily)
-  const isToday = period === 'daily';
-  const localStats = isToday ? getDashboardStats() : { totalRevenue: 0, paymentBreakdown: {cash:0, card:0, click:0, mixed:0}, fuelSplit: {} };
-
-  // Data helpers to merge backend polling with zero-latency SalesContext
-  const safeStats = stats || {};
-  const totalRev = (safeStats.totalRevenue || 0) + localStats.totalRevenue;
-
-  // Generic function to calculate payment split with real-time addition
-  const getPaymentMerged = (typeKey, target) => {
-    const backendAmount = safeStats[`${target}PaymentSplit`]?.[typeKey]?.amount || 0;
-    let localAmount = 0;
-    if (isToday) {
-      if (typeKey === 'CASH') localAmount = localStats.paymentBreakdown.cash;
-      if (typeKey === 'BANK_CARD') localAmount = localStats.paymentBreakdown.card;
-      if (typeKey === 'MIXED') localAmount = localStats.paymentBreakdown.click + localStats.paymentBreakdown.mixed;
-    }
-    return backendAmount + localAmount;
-  };
-
-  const calculateTotalPaymentFor = (target) => {
-    return getPaymentMerged('CASH', target) + getPaymentMerged('BANK_CARD', target) + getPaymentMerged('MIXED', target);
-  };
-
-  const getPaymentPercent = (typeKey, target) => {
-    const total = calculateTotalPaymentFor(target) || totalRev || 1;
-    return (getPaymentMerged(typeKey, target) / total) * 100;
-  };
-
-  const getFuelVolumeMerged = (fuelKey, isGas) => {
-    const backendVol = safeStats.fuelSplit?.[fuelKey] ? (isGas ? safeStats.fuelSplit[fuelKey].volume_m3 || safeStats.fuelSplit[fuelKey].volume_l : safeStats.fuelSplit[fuelKey].volume_l) : 0;
-    const localVol = localStats.fuelSplit[fuelKey]?.volume || 0;
-    return (backendVol || 0) + localVol;
-  };
-
-  const getFuelRevenueMerged = (fuelKey) => {
-    const backendRev = safeStats.fuelSplit?.[fuelKey]?.total_revenue || 0;
-    const localRev = localStats.fuelSplit[fuelKey]?.revenue || 0;
-    return backendRev + localRev;
-  };
 
   return (
     <div className="space-y-6 pb-6">
@@ -197,7 +157,7 @@ export default function MobileDashboard() {
                     </div>
                   </div>
                   <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                    {formatCurrency(totalRev)} <span className="text-xs font-bold">UZS</span>
+                    {formatCurrency(stats.totalRevenue)} <span className="text-xs font-bold">UZS</span>
                   </h3>
                 </div>
 
@@ -211,11 +171,11 @@ export default function MobileDashboard() {
                       </div>
                     </div>
                     <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                      {formatCurrency(getFuelVolumeMerged('METHANE', true))} <span className="text-xs font-bold">m³</span>
+                      {formatCurrency(stats.fuelSplit?.METHANE?.volume_m3 || 0)} <span className="text-xs font-bold">m³</span>
                     </h3>
-                    <p className="text-xs font-bold text-gray-400 mt-1">{formatCurrency(getFuelRevenueMerged('METHANE'))} UZS</p>
+                    <p className="text-xs font-bold text-gray-400 mt-1">{formatCurrency(stats.fuelSplit?.METHANE?.total_revenue || 0)} UZS</p>
                     <div className="mt-3 h-1.5 bg-blue-100 dark:bg-blue-900/50 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, (getFuelRevenueMerged('METHANE') / (totalRev || 1)) * 100)}%` }}></div>
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, ((stats.fuelSplit?.METHANE?.total_revenue || 0) / (stats.totalRevenue || 1)) * 100)}%` }}></div>
                     </div>
                   </div>
                 )}
@@ -230,11 +190,11 @@ export default function MobileDashboard() {
                       </div>
                     </div>
                     <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                      {formatCurrency(getFuelVolumeMerged('PROPANE', true))} <span className="text-xs font-bold">L</span>
+                      {formatCurrency(stats.fuelSplit?.PROPANE?.volume_l || 0)} <span className="text-xs font-bold">L</span>
                     </h3>
-                    <p className="text-xs font-bold text-gray-400 mt-1">{formatCurrency(getFuelRevenueMerged('PROPANE'))} UZS</p>
+                    <p className="text-xs font-bold text-gray-400 mt-1">{formatCurrency(stats.fuelSplit?.PROPANE?.total_revenue || 0)} UZS</p>
                     <div className="mt-3 h-1.5 bg-orange-100 dark:bg-orange-900/50 rounded-full overflow-hidden">
-                      <div className="h-full bg-orange-500 rounded-full" style={{ width: `${Math.min(100, (getFuelRevenueMerged('PROPANE') / (totalRev || 1)) * 100)}%` }}></div>
+                      <div className="h-full bg-orange-500 rounded-full" style={{ width: `${Math.min(100, ((stats.fuelSplit?.PROPANE?.total_revenue || 0) / (stats.totalRevenue || 1)) * 100)}%` }}></div>
                     </div>
                   </div>
                 )}
@@ -249,7 +209,7 @@ export default function MobileDashboard() {
                       </div>
                     </div>
                     <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                      {(safeStats.fuelSplit?.METHANE?.avg_kwh_per_m3 || 0).toFixed(2)} <span className="text-xs font-bold">kWh/m³</span>
+                      {(stats.fuelSplit?.METHANE?.avg_kwh_per_m3 || 0).toFixed(2)} <span className="text-xs font-bold">kWh/m³</span>
                     </h3>
                   </div>
                 )}
@@ -266,34 +226,34 @@ export default function MobileDashboard() {
                     <div>
                       <div className="flex justify-between mb-1.5">
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{t('bank_card')}</span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('BANK_CARD', 'gas').toFixed(1)}%</span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.gasPaymentSplit?.BANK_CARD?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('BANK_CARD', 'gas')}%` }}></div>
+                        <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${stats.gasPaymentSplit?.BANK_CARD?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('BANK_CARD', 'gas'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.gasPaymentSplit?.BANK_CARD?.amount || 0)} UZS</p>
                     </div>
                     {/* Naqd pul */}
                     <div>
                       <div className="flex justify-between mb-1.5">
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{t('cash')}</span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('CASH', 'gas').toFixed(1)}%</span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.gasPaymentSplit?.CASH?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('CASH', 'gas')}%` }}></div>
+                        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${stats.gasPaymentSplit?.CASH?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('CASH', 'gas'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.gasPaymentSplit?.CASH?.amount || 0)} UZS</p>
                     </div>
                     {/* Click / Aralash */}
                     <div>
                       <div className="flex justify-between mb-1.5">
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{t('mixed')} (Click)</span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('MIXED', 'gas').toFixed(1)}%</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{t('mixed')}</span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.gasPaymentSplit?.MIXED?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('MIXED', 'gas')}%` }}></div>
+                        <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${stats.gasPaymentSplit?.MIXED?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('MIXED', 'gas'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.gasPaymentSplit?.MIXED?.amount || 0)} UZS</p>
                     </div>
                   </div>
                 </div>
@@ -308,14 +268,14 @@ export default function MobileDashboard() {
                   </div>
                   <div className="space-y-5">
                     {[
-                      { label: 'Metan', revenue: getFuelRevenueMerged('METHANE'), color: 'bg-blue-500' },
-                      { label: 'Propan', revenue: getFuelRevenueMerged('PROPANE'), color: 'bg-orange-500' },
+                      { label: 'Metan', revenue: stats.fuelSplit?.METHANE?.total_revenue || 0, color: 'bg-blue-500' },
+                      { label: 'Propan', revenue: stats.fuelSplit?.PROPANE?.total_revenue || 0, color: 'bg-orange-500' },
                     ].filter(item =>
                       gasTab === 'all' ||
                       (gasTab === 'methane' && item.label === 'Metan') ||
                       (gasTab === 'propane' && item.label === 'Propan')
                     ).map((item) => {
-                      const pct = totalRev ? ((item.revenue || 0) / totalRev) * 100 : 0;
+                      const pct = stats.totalRevenue ? (item.revenue / stats.totalRevenue) * 100 : 0;
                       return (
                         <div key={item.label}>
                           <div className="flex justify-between mb-1.5">
@@ -383,7 +343,7 @@ export default function MobileDashboard() {
                     </div>
                   </div>
                   <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                    {formatCurrency(totalRev)} <span className="text-xs font-bold">UZS</span>
+                    {formatCurrency(stats.totalRevenue)} <span className="text-xs font-bold">UZS</span>
                   </h3>
                 </div>
 
@@ -393,9 +353,9 @@ export default function MobileDashboard() {
                   
                   if (petrolTab !== 'all' && petrolTab !== statKey.toLowerCase()) return null;
 
-                  const volume = getFuelVolumeMerged(statKey, false);
-                  const revenue = getFuelRevenueMerged(statKey);
-                  const percent = totalRev ? Math.min(100, (revenue / totalRev) * 100) : 0;
+                  const volume = stats.fuelSplit?.[statKey]?.volume_l || 0;
+                  const revenue = stats.fuelSplit?.[statKey]?.total_revenue || 0;
+                  const percent = stats.totalRevenue ? Math.min(100, (revenue / stats.totalRevenue) * 100) : 0;
                   
                   return (
                     <div key={pt.id} className={`bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700`}>
@@ -428,34 +388,34 @@ export default function MobileDashboard() {
                     <div>
                       <div className="flex justify-between mb-1.5">
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{t('bank_card')}</span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('BANK_CARD', 'petrol').toFixed(1)}%</span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.petrolPaymentSplit?.BANK_CARD?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('BANK_CARD', 'petrol')}%` }}></div>
+                        <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${stats.petrolPaymentSplit?.BANK_CARD?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('BANK_CARD', 'petrol'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.petrolPaymentSplit?.BANK_CARD?.amount || 0)} UZS</p>
                     </div>
                     {/* Naqd pul */}
                     <div>
                       <div className="flex justify-between mb-1.5">
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{t('cash')}</span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('CASH', 'petrol').toFixed(1)}%</span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.petrolPaymentSplit?.CASH?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('CASH', 'petrol')}%` }}></div>
+                        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${stats.petrolPaymentSplit?.CASH?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('CASH', 'petrol'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.petrolPaymentSplit?.CASH?.amount || 0)} UZS</p>
                     </div>
                     {/* Click / Aralash */}
                     <div>
                       <div className="flex justify-between mb-1.5">
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{t('mixed')}</span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('MIXED', 'petrol').toFixed(1)}%</span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.petrolPaymentSplit?.MIXED?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('MIXED', 'petrol')}%` }}></div>
+                        <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${stats.petrolPaymentSplit?.MIXED?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('MIXED', 'petrol'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.petrolPaymentSplit?.MIXED?.amount || 0)} UZS</p>
                     </div>
                   </div>
                 </div>
@@ -473,8 +433,8 @@ export default function MobileDashboard() {
                       petrolTab === 'all' || petrolTab === pt.id.replace('AI', 'AI_').toLowerCase()
                     ).map((pt) => {
                       const statKey = pt.id.replace('AI', 'AI_');
-                      const revenue = getFuelRevenueMerged(statKey);
-                      const pct = totalRev ? (revenue / totalRev) * 100 : 0;
+                      const revenue = stats.fuelSplit?.[statKey]?.total_revenue || 0;
+                      const pct = stats.totalRevenue ? (revenue / stats.totalRevenue) * 100 : 0;
                       return (
                         <div key={pt.label}>
                           <div className="flex justify-between mb-1.5">
@@ -518,11 +478,11 @@ export default function MobileDashboard() {
                     </div>
                   </div>
                   <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                    {formatCurrency(getFuelVolumeMerged('ELECTRIC', false))} <span className="text-xs font-bold">kW</span>
+                    {formatCurrency(stats.fuelSplit?.ELECTRIC?.volume_l || 0)} <span className="text-xs font-bold">kW</span>
                   </h3>
-                  <p className="text-xs font-bold text-gray-400 mt-1">{formatCurrency(getFuelRevenueMerged('ELECTRIC'))} UZS</p>
+                  <p className="text-xs font-bold text-gray-400 mt-1">{formatCurrency(stats.fuelSplit?.ELECTRIC?.total_revenue || 0)} UZS</p>
                   <div className="mt-3 h-1.5 bg-green-100 dark:bg-green-900/50 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${totalRev ? Math.min(100, (getFuelRevenueMerged('ELECTRIC') / totalRev) * 100) : 0}%` }}></div>
+                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${stats.totalRevenue ? Math.min(100, ((stats.fuelSplit?.ELECTRIC?.total_revenue || 0) / stats.totalRevenue) * 100) : 0}%` }}></div>
                   </div>
                 </div>
 
@@ -534,7 +494,7 @@ export default function MobileDashboard() {
                     </div>
                   </div>
                   <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                    {formatCurrency(getFuelRevenueMerged('ELECTRIC'))} <span className="text-xs font-bold">UZS</span>
+                    {formatCurrency(stats.fuelSplit?.ELECTRIC?.total_revenue || 0)} <span className="text-xs font-bold">UZS</span>
                   </h3>
                   <p className="text-xs font-bold text-gray-400 mt-1">Tarif: {formatCurrency(fuelPrices?.ELECTRIC || 1200)} UZS / 1 kW</p>
                 </div>
@@ -548,32 +508,32 @@ export default function MobileDashboard() {
                     <div>
                       <div className="flex justify-between mb-1.5">
                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Bank kartasi</span>
-                         <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('BANK_CARD', 'electric').toFixed(1)}%</span>
+                         <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.electricPaymentSplit?.BANK_CARD?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('BANK_CARD', 'electric')}%` }}></div>
+                        <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${stats.electricPaymentSplit?.BANK_CARD?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('BANK_CARD', 'electric'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.electricPaymentSplit?.BANK_CARD?.amount || 0)} UZS</p>
                     </div>
                     <div>
                       <div className="flex justify-between mb-1.5">
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Naqd pul</span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('CASH', 'electric').toFixed(1)}%</span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.electricPaymentSplit?.CASH?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('CASH', 'electric')}%` }}></div>
+                        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${stats.electricPaymentSplit?.CASH?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('CASH', 'electric'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.electricPaymentSplit?.CASH?.amount || 0)} UZS</p>
                     </div>
                     <div>
                       <div className="flex justify-between mb-1.5">
                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Aralash to'lov</span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">{getPaymentPercent('MIXED', 'electric').toFixed(1)}%</span>
+                        <span className="text-xs font-black text-gray-900 dark:text-white">{(stats.electricPaymentSplit?.MIXED?.percentage || 0).toFixed(1)}%</span>
                       </div>
                       <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${getPaymentPercent('MIXED', 'electric')}%` }}></div>
+                        <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${stats.electricPaymentSplit?.MIXED?.percentage || 0}%` }}></div>
                       </div>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(getPaymentMerged('MIXED', 'electric'))} UZS</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">{formatCurrency(stats.electricPaymentSplit?.MIXED?.amount || 0)} UZS</p>
                     </div>
                   </div>
                 </div>
