@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { TrendingUp, TrendingDown, DollarSign, Fuel, Battery, Droplets } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Fuel, Battery, Droplets, Zap } from 'lucide-react';
 
 export default function MobileFinance() {
   const { fuels } = useSettings();
