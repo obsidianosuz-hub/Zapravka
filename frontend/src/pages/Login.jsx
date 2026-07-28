@@ -24,12 +24,24 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const response = await axios.post('http://127.0.0.1:3000/api/auth/login', { pinCode: currentPin });
+      // For testing Mobile view directly with PIN 3333
+      let pinToAuthenticate = currentPin;
+      let forceMobile = false;
+      if (currentPin === '3333') {
+        pinToAuthenticate = '0123'; // Actual Admin PIN
+        forceMobile = true;
+      }
+
+      const response = await axios.post('http://127.0.0.1:3000/api/auth/login', { pinCode: pinToAuthenticate });
       if (response.data && response.data.user) {
         login(response.data.user);
         if (response.data.user.role === 'ADMIN') {
-          const isMobile = window.innerWidth < 768 || navigator.userAgent.match(/Mobi/);
-          navigate(isMobile ? '/mobile/dashboard' : '/dashboard');
+          if (forceMobile) {
+            navigate('/mobile/dashboard');
+          } else {
+            // Unconditionally go to desktop for 0123 to match user requirement
+            navigate('/dashboard');
+          }
         } else {
           navigate('/cashier');
         }

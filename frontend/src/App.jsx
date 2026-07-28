@@ -83,6 +83,7 @@ function App() {
           {/* Mobile Admin Routes */}
           <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
             <Route path="/mobile" element={<MobileAdminLayout />}>
+              <Route index element={<Navigate to="/mobile/dashboard" replace />} />
               <Route path="dashboard" element={<MobileDashboard />} />
               <Route path="finance" element={<MobileFinance />} />
               <Route path="employees" element={<MobileEmployees />} />
