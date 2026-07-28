@@ -17,6 +17,10 @@ import Contracts from './pages/Contracts';
 import ContractTemplates from './pages/ContractTemplates';
 import ComplianceManager from './pages/ComplianceManager';
 import Tariffs from './pages/Tariffs';
+import MobileAdminLayout from './layouts/MobileAdminLayout';
+import MobileDashboard from './pages/MobileDashboard';
+import MobileFinance from './pages/MobileFinance';
+import MobileEmployees from './pages/MobileEmployees';
 import { useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ allowedRoles }) => {
@@ -73,6 +77,15 @@ function App() {
               <Route path="yuridik/shablonlar" element={<ContractTemplates />} />
               <Route path="yuridik/compliance" element={<ComplianceManager />} />
               <Route path="developer" element={<Developer />} />
+            </Route>
+          </Route>
+          
+          {/* Mobile Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="/mobile" element={<MobileAdminLayout />}>
+              <Route path="dashboard" element={<MobileDashboard />} />
+              <Route path="finance" element={<MobileFinance />} />
+              <Route path="employees" element={<MobileEmployees />} />
             </Route>
           </Route>
         </Route>

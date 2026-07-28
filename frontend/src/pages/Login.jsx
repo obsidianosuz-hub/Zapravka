@@ -28,7 +28,8 @@ export default function Login() {
       if (response.data && response.data.user) {
         login(response.data.user);
         if (response.data.user.role === 'ADMIN') {
-          navigate('/dashboard');
+          const isMobile = window.innerWidth < 768 || navigator.userAgent.match(/Mobi/);
+          navigate(isMobile ? '/mobile/dashboard' : '/dashboard');
         } else {
           navigate('/cashier');
         }
@@ -73,7 +74,8 @@ export default function Login() {
         if (response.data && response.data.user) {
           login(response.data.user);
           if (response.data.user.role === 'ADMIN') {
-            navigate('/dashboard');
+            const isMobile = window.innerWidth < 768 || navigator.userAgent.match(/Mobi/);
+            navigate(isMobile ? '/mobile/dashboard' : '/dashboard');
           } else {
             navigate('/cashier');
           }
